@@ -93,7 +93,7 @@ class HybridModel(nn.Module):
         self.time_calculator["gcn_calculate_time"] += end_time - start_time
 
         # Concatenate all outputs
-        print(out_rnn.shape, out_cnn.shape, out_transformer.shape, out_gcn.shape)
+        # print(out_rnn.shape, out_cnn.shape, out_transformer.shape, out_gcn.shape)
         out = torch.cat((out_rnn, out_cnn, out_transformer, out_gcn.reshape(32, 1)), dim=1)
 
         # Fully connected layers
