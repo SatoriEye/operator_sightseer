@@ -3,6 +3,8 @@ import torch
 import time
 import os
 import torchvision.models as models
+from torchvision import transforms
+from PIL import Image
 from .testnn import HybridModel
 
 
@@ -148,3 +150,74 @@ def model_forward_speed_test(epochs=50):
     end_time = time.time()
 
     return end_time-start_time, model.time_calculator
+
+
+def load_model_and_evaluate(epochs=50):
+    # 1. 加载预训练的 ResNet-18 模型
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    script_path = os.path.abspath(__file__)
+    script_dir = os.path.dirname(script_path)
+    weight_path = os.path.join(script_dir, 'test_weight/resnet18-f37072fd.pth')
+    model_path = weight_path
+
+    model = models.resnet18(pretrained=False)
+    model.load_state_dict(torch.load(model_path))
+    model.train()  # 设置模型为训练模式
+    model = model.to(device)  # 如果有 GPU，将模型移动到 GPU 上
+
+    # 2. 生成随机输入数据
+    batch_size = 32  # 批处理大小
+    input_tensor = torch.randn(batch_size, 3, 224, 224).to('cuda')  # 生成随机输入张量
+
+    # 3. 初始化结果字典
+    results = {
+        'forward_throughput': [],
+        'forward_total_time': [],
+        'backward_total_time': [],
+        'backward_average_time': []
+    }
+
+    # 4. 执行多个 epoch 的前向传播和反向传播
+    for epoch in range(epochs):
+        # 前向传播
+        start_time = time.time()
+        total_images = 100  # 测试用的图像数量
+        num_batches = total_images // batch_size
+        for _ in range(num_batches):
+            with torch.no_grad():
+                output = model(input_tensor)
+
+        end_time = time.time()
+        total_time = end_time - start_time
+        throughput = total_images / total_time
+        results['forward_throughput'].append(throughput)
+        results['forward_total_time'].append(total_time)
+
+        # 反向传播
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # 使用 Adam 优化器
+        criterion = torch.nn.CrossEntropyLoss()
+
+        start_time = time.time()
+        for _ in range(num_batches):
+            optimizer.zero_grad()
+            output = model(input_tensor)
+            labels = torch.randint(0, 1000, (batch_size,)).to('cuda')  # 随机生成标签
+            loss = criterion(output, labels)
+            loss.backward()
+            optimizer.step()
+
+        end_time = time.time()
+        total_backward_time = end_time - start_time
+        average_backward_time = total_backward_time / total_images
+        results['backward_total_time'].append(total_backward_time)
+        results['backward_average_time'].append(average_backward_time)
+
+    return results
+# if __name__ == "__main__":
+#     epochs = 5  # 你可以根据需要更改 epoch 数
+#     results = load_model_and_evaluate(epochs)
+#
+#     # 打印结果
+#     print("Results:")
+#     for key, value in results.items():
+#         print(f"{key}: {value}")
