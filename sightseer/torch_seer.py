@@ -173,13 +173,12 @@ def load_model_and_evaluate(epochs=50):
     results = {
         'forward_throughput': [],
         'forward_total_time': [],
-        'backward_total_time': [],
-        'backward_average_time': []
+        'for-backward_total_time': [],
     }
 
     # 4. 执行多个 epoch 的前向传播和反向传播
     for epoch in range(epochs):
-        # 前向传播
+        # 仅前向传播
         start_time = time.time()
         total_images = 100  # 测试用的图像数量
         num_batches = total_images // batch_size
@@ -193,7 +192,7 @@ def load_model_and_evaluate(epochs=50):
         results['forward_throughput'].append(throughput)
         results['forward_total_time'].append(total_time)
 
-        # 反向传播
+        # 前向+反向传播
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # 使用 Adam 优化器
         criterion = torch.nn.CrossEntropyLoss()
 
@@ -208,9 +207,7 @@ def load_model_and_evaluate(epochs=50):
 
         end_time = time.time()
         total_backward_time = end_time - start_time
-        average_backward_time = total_backward_time / total_images
-        results['backward_total_time'].append(total_backward_time)
-        results['backward_average_time'].append(average_backward_time)
+        results['for-backward_total_time'].append(total_backward_time)
 
     return results
 # if __name__ == "__main__":
