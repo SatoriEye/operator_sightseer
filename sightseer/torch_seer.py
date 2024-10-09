@@ -84,7 +84,7 @@ def model_moving_speed_test(epochs=50):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     script_path = os.path.abspath(__file__)
     script_dir = os.path.dirname(script_path)
-    weight_path = os.path.join(script_dir, 'test_weight')
+    weight_path = os.path.join(script_dir, 'test_weight/resnet18-f37072fd.pth')
 
     total_time = 0.0
     for i in range(epochs):
