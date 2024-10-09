@@ -3,7 +3,7 @@ import torch
 import time
 import os
 import torchvision.models as models
-from .testnn import HybridModel
+from testnn import HybridModel
 
 
 def get_gpu_memory_info():
