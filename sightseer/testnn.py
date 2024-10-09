@@ -26,8 +26,7 @@ class HybridModel(nn.Module):
         self.gcn = GCNConv(graph_input_dim, gcn_output_dim)
 
         # Fully connected (linear) layers
-        self.fc1 = nn.Linear(hidden_size + 32 * 7 * 7 + d_model + gcn_output_dim,
-                             512)  # Adjust the size based on your input
+        self.fc1 = nn.Linear(6913, 512)  # Adjust the size based on your input
         self.fc2 = nn.Linear(512, num_classes)
 
         # Activation function
@@ -50,7 +49,7 @@ class HybridModel(nn.Module):
             "tf_size": f"nn.TransformerEncoder(encoder_layer, num_layers={num_encoder_layers})",
             "gcn_size": f"GCNConv({graph_input_dim}, {gcn_output_dim})",
             "bn": "nn.BatchNorm1d(512)",
-            "linear_size": f"nn.Linear({hidden_size} + 32 * 7 * 7 + {d_model} + {gcn_output_dim} >>> 512 >>> {num_classes})",
+            "linear_size": f"nn.Linear(6913 >>> 512 >>> {num_classes})",
             "activate_func": "ReLU",
             "cnt": 0,
         }
