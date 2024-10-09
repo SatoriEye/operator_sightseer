@@ -3,6 +3,7 @@ import torch
 import time
 import os
 import torchvision.models as models
+from .testnn import HybridModel
 
 
 def get_gpu_memory_info():
@@ -79,7 +80,7 @@ def measure_tensor_transfer_times(sizes, num_trials=50):
 
 
 def model_moving_speed_test(epochs=50):
-
+    # 模型移动速度测试，使用resnet18做重复测试
     # 检查 CUDA 是否可用
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     script_path = os.path.abspath(__file__)
@@ -101,3 +102,49 @@ def model_moving_speed_test(epochs=50):
         total_time += (end_time - start_time)
 
     return total_time / epochs
+
+
+def model_forward_speed_test(epochs=50):
+    # 参数设置
+    input_size = 100  # Input size for RNN
+    hidden_size = 128  # Hidden size for RNN
+    num_classes = 10  # Number of classes for classification
+    graph_input_dim = 1433  # Input dimension for GCN (e.g., number of node features)
+    gcn_output_dim = 16  # Output dimension for GCN
+    d_model = 512  # Dimension of the model
+    nhead = 8  # Number of attention heads
+    num_encoder_layers = 6  # Number of encoder layers
+    dim_feedforward = 2048  # Dimension of the feedforward network
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = HybridModel(input_size, hidden_size, num_classes, graph_input_dim,
+                        gcn_output_dim, d_model, nhead, num_encoder_layers, dim_feedforward)
+
+    # 示例输入数据
+    batch_size = 32
+    seq_length = 50
+    rnn_input = torch.randn(batch_size, seq_length, input_size)
+    cnn_input = torch.randn(batch_size, 1, 28, 28)  # Example input for a 28x28 image
+    transformer_input = torch.randn(batch_size, seq_length, d_model)  # Example input for transformer
+    graph_input = torch.randn(batch_size, graph_input_dim)  # Example graph node features
+    edge_index = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)  # Example graph edges
+
+    rnn_input = rnn_input.to(device)
+    cnn_input = cnn_input.to(device)
+    transformer_input = transformer_input.to(device)
+    graph_input = graph_input.to(device)
+    edge_index = edge_index.to(device)
+    model.to(device)
+
+    model.eval()
+
+    # 不需要计算梯度
+    start_time = time.time()
+    with torch.no_grad():
+        # 前向传播
+        for i in range(epochs):
+            output = model(rnn_input, cnn_input, transformer_input, graph_input, edge_index)
+
+    end_time = time.time()
+
+    return end_time-start_time, model.time_calculator
