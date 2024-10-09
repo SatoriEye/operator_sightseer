@@ -1,6 +1,8 @@
 import subprocess
 import torch
 import time
+import os
+import torchvision.models as models
 
 
 def get_gpu_memory_info():
@@ -76,3 +78,26 @@ def measure_tensor_transfer_times(sizes, num_trials=50):
 #     print(e)
 
 
+def model_moving_speed_test(epochs=50):
+
+    # 检查 CUDA 是否可用
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    script_path = os.path.abspath(__file__)
+    script_dir = os.path.dirname(script_path)
+    weight_path = os.path.join(script_dir, 'test_weight')
+
+    total_time = 0.0
+    for i in range(epochs):
+        start_time = time.time()
+
+        # 加载模型权重
+        model = models.resnet18(pretrained=False)
+        state_dict = torch.load(weight_path)
+        # 将加载的权重加载到模型中
+        model.load_state_dict(state_dict)
+        model.to(device)
+
+        end_time = time.time()
+        total_time += (end_time - start_time)
+
+    return total_time / epochs
