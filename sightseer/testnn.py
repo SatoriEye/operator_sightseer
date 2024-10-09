@@ -95,7 +95,7 @@ class HybridModel(nn.Module):
 
         # Concatenate all outputs
         print(out_rnn, out_cnn, out_transformer, out_gcn)
-        out = torch.cat((out_rnn, out_cnn, out_transformer, out_gcn), dim=1)
+        out = torch.cat((out_rnn.shape, out_cnn.shape, out_transformer.shape, out_gcn.shape), dim=1)
 
         # Fully connected layers
         out = self.relu(self.bn1(self.fc1(out)))
